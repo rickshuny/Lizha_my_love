@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="sw" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kwa Ajili Yako Mpenzi ❤️</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts: Playfair Display & Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background:
+                linear-gradient(135deg, rgba(255, 240, 243, 0.82), rgba(255, 255, 255, 0.58)),
+                url('couple-making-heart-from-hands-sea-shore.jpg') center center / cover no-repeat fixed;
+            color: #4a3538;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        .hero-couple-bg {
+            background: transparent;
+        }
+        /* Floating background items */
+        @keyframes floatUp {
+            0% { transform: translateY(105vh) rotate(0deg) scale(0.6); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) rotate(360deg) scale(1.2); opacity: 0; }
+        }
+        .floating-item {
+            position: fixed;
+            bottom: -50px;
+            pointer-events: none;
+            z-index: 1;
+            animation: floatUp 8s linear infinite;
+        }
+        /* Step Transitions */
+        .step-view {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .step-view.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        /* 3D Flip Cards */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 { transform: rotateY(180deg); }
+
+        /* Letter unfolded state */
+        .letter-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.8s ease-in-out, opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
+        .letter-content.open {
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        /* Running 'No' Button relative movement */
+        #btnNo {
+            transition: all 0.2s ease-out;
+        }
+
+        /* Motion gallery cards */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .gallery-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (min-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        .gallery-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            aspect-ratio: 4 / 5;
+            background: rgba(255, 255, 255, 0.75);
+            box-shadow: 0 18px 38px rgba(244, 114, 182, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            opacity: 0;
+            transform: translateY(24px) scale(0.96);
+            transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease, opacity 0.7s ease;
+            will-change: transform;
+        }
+
+        .gallery-card.is-visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .gallery-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.02));
+            z-index: 1;
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transform: scale(1.02);
+            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), filter 0.8s ease;
+            filter: saturate(1.05) contrast(1.02);
+        }
+
+        .gallery-card:hover {
+            box-shadow: 0 30px 60px rgba(244, 114, 182, 0.2);
+            transform: translateY(-6px) rotateX(2deg) rotateY(-2deg);
+        }
+
+        .gallery-card:hover img {
+            transform: scale(1.1);
+            filter: saturate(1.15) contrast(1.08);
+        }
+
+        .gallery-card .gallery-label {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2;
+            padding: 0.9rem 1rem 1rem;
+            transform: translateY(10px);
+            opacity: 0;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+        }
+
+        .gallery-card:hover .gallery-label,
+        .gallery-card:focus-within .gallery-label {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .gallery-card .gallery-label p {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.8rem;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            backdrop-filter: blur(6px);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="relative flex flex-col justify-between min-h-screen py-6 px-4 md:px-8">
+
+    <!-- Floating Background Particles -->
+    <div id="floating-bg" class="fixed inset-0 pointer-events-none z-0"></div>
+
+    <!-- HEADER / STEPPER PROGRESS BAR -->
+    <header class="max-w-3xl mx-auto w-full z-10 mb-6">
+        <div class="glass-card p-4 md:p-6 rounded-3xl shadow-lg">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">💖</span>
+                    <span class="font-playfair font-bold text-lg text-rose-700">My love Lizha</span>
+                </div>
+                <span id="stepCounter" class="text-xs font-semibold bg-rose-100 text-rose-600 px-3 py-1 rounded-full uppercase tracking-wider">
+                    Hatua 1 kati ya 5
+                </span>
+            </div>
+
+            <!-- Stepper Progress Bar -->
+            <div class="w-full bg-rose-100 h-2.5 rounded-full overflow-hidden">
+                <div id="progressBar" class="bg-gradient-to-r from-rose-500 to-pink-500 h-full w-1/5 transition-all duration-500 rounded-full"></div>
+            </div>
+
+            <!-- Stepper Titles Indicators -->
+            <div class="hidden sm:flex justify-between text-[11px] font-medium text-stone-500 mt-3 px-1">
+                <span id="label-1" class="text-rose-600 font-bold">1. Karibu</span>
+                <span id="label-2">2. Hadithi isiyoisha ladha</span>
+                <span id="label-3">3. Kwanini nakupenda</span>
+                <span id="label-4">4. picha za moyo wangu</span>
+                <span id="label-5">5. Barua ya upendo</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN STEPPER CONTENT AREA -->
+    <main class="max-w-3xl mx-auto w-full z-10 my-auto">
+
+        <!-- STEP 1: HERO & TIMER -->
+        <section id="step-1" class="step-view active">
+            <div class="glass-card hero-couple-bg p-8 md:p-12 rounded-3xl shadow-xl text-center">
+                <span class="inline-block bg-rose-100 text-rose-600 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-6">
+                    ✨ Malkia Wa Moyo Wangu ✨
+                </span>
+                <h1 class="font-playfair text-4xl md:text-6xl font-extrabold text-stone-800 leading-tight mb-6">
+                    Karibu Kwenye Ulimwengu <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-600 to-pink-500">Wetu</span>
+                </h1>
+                <p id="typewriter" class="text-stone-600 text-base md:text-lg min-h-[3rem] mb-8 max-w-xl mx-auto">
+                    <!-- Typewriter dynamic text -->
+                </p>
+
+                <!-- Count up timer -->
+                <div class="bg-white/60 p-6 rounded-2xl border border-rose-200/60 shadow-inner max-w-lg mx-auto mb-10">
+                    <p class="text-xs font-semibold text-rose-600 uppercase tracking-widest mb-3">Muda Tangu Tulipoanza safari ya upendo wetu</p>
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div>
+                            <span id="days" class="font-playfair text-2xl md:text-3xl font-bold text-stone-800">00</span>
+                            <p class="text-[10px] text-stone-500 uppercase mt-1">Siku</p>
+                        </div>
+                        <div>
+                            <span id="hours" class="font-playfair text-2xl md:text-3xl font-bold text-stone-800">00</span>
+                            <p class="text-[10px] text-stone-500 uppercase mt-1">Saa</p>
+                        </div>
+                        <div>
+                            <span id="minutes" class="font-playfair text-2xl md:text-3xl font-bold text-stone-800">00</span>
+                            <p class="text-[10px] text-stone-500 uppercase mt-1">Dakika</p>
+                        </div>
+                        <div>
+                            <span id="seconds" class="font-playfair text-2xl md:text-3xl font-bold text-stone-800">00</span>
+                            <p class="text-[10px] text-stone-500 uppercase mt-1">Sekunde</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="promptNextStep(1)" class="w-full sm:w-auto bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold px-10 py-4 rounded-full shadow-lg hover:shadow-rose-300/50 hover:scale-105 transition duration-300 flex items-center justify-center gap-2 mx-auto">
+                    <span>Anza</span>
+                    <span>➔</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 2: OUR STORY / TIMELINE -->
+        <section id="step-2" class="step-view">
+            <div class="glass-card p-6 md:p-10 rounded-3xl shadow-xl">
+                <div class="text-center mb-8">
+                    <span class="text-xs font-semibold text-rose-600 uppercase tracking-widest"> Hadith Utamu colea</span>
+                    <h2 class="font-playfair text-3xl md:text-4xl font-bold text-stone-800 mt-1">Hadithi Yetu ya Upendo 📖</h2>
+                    <div class="w-12 h-1 bg-rose-500 mx-auto mt-3 rounded-full"></div>
+                </div>
+
+                <div class="space-y-6 relative border-l-2 border-rose-300 ml-4 pl-6">
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 bg-rose-500 rounded-full border-4 border-white shadow"></div>
+                        <h3 class="font-playfair text-lg font-bold text-stone-800">Siku ya Kwanza Kuonana</h3>
+                        <p class="text-stone-600 text-sm mt-1">
+                            Siku hiyo kila kitu kilibadilika. Tabasamu lako liliangaza siku yangu na tangu wakati huo nilijua kuwa wewe ni mtu wa pekee sana katika maisha yangu.
+                        </p>
+                    </div>
+
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 bg-rose-500 rounded-full border-4 border-white shadow"></div>
+                        <h3 class="font-playfair text-lg font-bold text-stone-800">First Date Yetu</h3>
+                        <p class="text-stone-600 text-sm mt-1">
+                            Tuliongea kwa saa nyingi bila kuchoka. Kicheko chako kilikuwa muziki mtamu masikioni mwangu, na hapo ndipo nilipozama mazima kwenye upendo wako.
+                        </p>
+                    </div>
+
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1.5 w-4 h-4 bg-rose-500 rounded-full border-4 border-white shadow"></div>
+                        <h3 class="font-playfair text-lg font-bold text-stone-800">Kila Siku Pamoja</h3>
+                        <p class="text-stone-600 text-sm mt-1">
+                            Kila kukicha ninajifunza kukupenda zaidi. Furaha yangu imeongezeka mara dufu kwa sababu nipo nawe .
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-between gap-4">
+                    <button onclick="goToStep(1)" class="px-6 py-3 rounded-full text-stone-600 text-sm font-medium hover:bg-white/50 transition">
+                        ⬅ Nyuma
+                    </button>
+                    <button onclick="promptNextStep(2)" class="bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold px-8 py-3 rounded-full shadow-md hover:scale-105 transition text-sm">
+                        Endelea ➔
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 3: REASONS WHY I LOVE YOU -->
+        <section id="step-3" class="step-view">
+            <div class="glass-card p-6 md:p-10 rounded-3xl shadow-xl">
+                <div class="text-center mb-8">
+                    <span class="text-xs font-semibold text-rose-600 uppercase tracking-widest">Kwanini Nakupenda?</span>
+                    <h2 class="font-playfair text-3xl md:text-4xl font-bold text-stone-800 mt-1">Sababu Zilizofanya Nakupenda 💡</h2>
+                    <p class="text-stone-500 text-xs mt-1">Gusa kadi yoyote kuona kilichopo ndani</p>
+                    <div class="w-12 h-1 bg-rose-500 mx-auto mt-3 rounded-full"></div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Flip Card 1 -->
+                    <div class="perspective-1000 h-48 cursor-pointer" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
+                        <div class="transform-style-3d relative w-full h-full rounded-2xl shadow">
+                            <div class="backface-hidden absolute inset-0 bg-white/90 p-6 rounded-2xl flex flex-col items-center justify-center text-center border border-rose-100">
+                                <span class="text-3xl mb-2">✨</span>
+                                <h3 class="font-playfair font-bold text-stone-800">Tabasamu Lako</h3>
+                                <p class="text-[10px] text-rose-500 mt-2 font-medium">Gusa hapa ➔</p>
+                            </div>
+                            <div class="backface-hidden absolute inset-0 rotate-y-180 bg-gradient-to-br from-rose-500 to-pink-500 text-white p-5 rounded-2xl flex items-center justify-center text-center text-xs leading-relaxed">
+                                Tabasamu lako lina nguvu ya kuondoa mawingu yote meusi kwenye siku yangu. Ni nuru yangu!
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flip Card 2 -->
+                    <div class="perspective-1000 h-48 cursor-pointer" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
+                        <div class="transform-style-3d relative w-full h-full rounded-2xl shadow">
+                            <div class="backface-hidden absolute inset-0 bg-white/90 p-6 rounded-2xl flex flex-col items-center justify-center text-center border border-rose-100">
+                                <span class="text-3xl mb-2">💖</span>
+                                <h3 class="font-playfair font-bold text-stone-800">Upole Wako</h3>
+                                <p class="text-[10px] text-rose-500 mt-2 font-medium">Gusa hapa ➔</p>
+                            </div>
+                            <div class="backface-hidden absolute inset-0 rotate-y-180 bg-gradient-to-br from-rose-500 to-pink-500 text-white p-5 rounded-2xl flex items-center justify-center text-center text-xs leading-relaxed">
+                                Jinsi unavyowajali wengine na wema wako wa asili unanifanya nizidi kukuheshimu kila siku.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flip Card 3 -->
+                    <div class="perspective-1000 h-48 cursor-pointer" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
+                        <div class="transform-style-3d relative w-full h-full rounded-2xl shadow">
+                            <div class="backface-hidden absolute inset-0 bg-white/90 p-6 rounded-2xl flex flex-col items-center justify-center text-center border border-rose-100">
+                                <span class="text-3xl mb-2">🌟</span>
+                                <h3 class="font-playfair font-bold text-stone-800">Uelewa Wako</h3>
+                                <p class="text-[10px] text-rose-500 mt-2 font-medium">Gusa hapa ➔</p>
+                            </div>
+                            <div class="backface-hidden absolute inset-0 rotate-y-180 bg-gradient-to-br from-rose-500 to-pink-500 text-white p-5 rounded-2xl flex items-center justify-center text-center text-xs leading-relaxed">
+                                Hata nisiposema neno, unajua hisia zangu. Unanilewa kuliko mtu yeyote duniani.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-between gap-4">
+                    <button onclick="goToStep(2)" class="px-6 py-3 rounded-full text-stone-600 text-sm font-medium hover:bg-white/50 transition">
+                        ⬅ Nyuma
+                    </button>
+                    <button onclick="promptNextStep(3)" class="bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold px-8 py-3 rounded-full shadow-md hover:scale-105 transition text-sm">
+                        Endelea ➔
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 4: PHOTO GALLERY -->
+        <section id="step-4" class="step-view">
+            <div class="glass-card p-6 md:p-10 rounded-3xl shadow-xl">
+                <div class="text-center mb-8">
+                    <span class="text-xs font-semibold text-rose-600 uppercase tracking-widest">Je unakumbuka? </span>
+                    <h2 class="font-playfair text-3xl md:text-4xl font-bold text-stone-800 mt-1"> PHOTO GALLERY 📸</h2>
+                    <div class="w-12 h-1 bg-rose-500 mx-auto mt-3 rounded-full"></div>
+                </div>
+
+                <div class="gallery-grid">
+                    <div class="gallery-card">
+                        <img src="photo_1_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 1">
+                        <div class="gallery-label"><p>✨ Siku ya Furaha</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_2_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 2">
+                        <div class="gallery-label"><p>💖 Kicheko Chako</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_3_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 3">
+                        <div class="gallery-label"><p>🌹 Upendo Wa Milele</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_4_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 4">
+                        <div class="gallery-label"><p>🌷 Vile tunavyotaka</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_5_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 5">
+                        <div class="gallery-label"><p>💫 Moyo wangu</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_6_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 6">
+                        <div class="gallery-label"><p>🌙 Nifungue moyo</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_7_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 7">
+                        <div class="gallery-label"><p>🫶 Wako kila siku</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_8_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 8">
+                        <div class="gallery-label"><p>🌸 Nafurahi nawe</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_9_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 9">
+                        <div class="gallery-label"><p>💞 Kisasa cha moyo</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_10_2026-11-01_14-36-35.jpg" alt="Picha ya upendo 10">
+                        <div class="gallery-label"><p>✨ Dunia yetu</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_2026-11-01_14-36-58.jpg" alt="Picha ya upendo 11">
+                        <div class="gallery-label"><p>📸 Kumbuka hii</p></div>
+                    </div>
+                    <div class="gallery-card">
+                        <img src="photo_2026-11-01_14-37-04.jpg" alt="Picha ya upendo 12">
+                        <div class="gallery-label"><p>💖 Milele pamoja</p></div>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-between gap-4">
+                    <button onclick="goToStep(3)" class="px-6 py-3 rounded-full text-stone-600 text-sm font-medium hover:bg-white/50 transition">
+                        ⬅ Nyuma
+                    </button>
+                    <button onclick="promptNextStep(4)" class="bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold px-8 py-3 rounded-full shadow-md hover:scale-105 transition text-sm">
+                        Hatua ya Mwisho ➔
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 5: LOVE LETTER (FINALE) -->
+        <section id="step-5" class="step-view">
+            <div class="glass-card p-6 md:p-10 rounded-3xl shadow-xl text-center">
+                <div class="mb-6">
+                    <span class="text-xs font-semibold text-rose-600 uppercase tracking-widest">Mwanzo mpya</span>
+                    <h2 class="font-playfair text-3xl md:text-4xl font-bold text-stone-800 mt-1">Barua Yangu Kwako 💌</h2>
+                    <div class="w-12 h-1 bg-rose-500 mx-auto mt-3 rounded-full"></div>
+                </div>
+
+                <div class="bg-white/90 p-6 md:p-8 rounded-2xl border border-rose-200 shadow-md cursor-pointer group hover:border-rose-400 transition" onclick="openFinalLetter()">
+                    <div id="envelopeIcon" class="text-6xl mb-4 animate-bounce">💌</div>
+                    <h3 id="letterClickText" class="font-playfair font-bold text-xl text-stone-800">Bonyeza hapa kufungua Barua Yako Maalum</h3>
+                    <p class="text-stone-500 text-xs mt-1">Imethibitishwa kwa upendo mwingi</p>
+
+                    <div id="letterBody" class="letter-content text-left mt-6 pt-6 border-t border-rose-200 font-playfair text-stone-700 space-y-4 leading-relaxed text-base">
+                        <p class="italic text-rose-600 font-semibold text-lg">Mpenzi Wangu wa Thamani,</p>
+                        <p>
+                            Kama kuna kitu ambacho hakitabadilika kamwe duniani hapa, ni jinsi ninavyokupenda na kukuthamini kwa moyo wangu wote. Wewe umekuwa nuru kwenye maisha yangu na sababu kuu inayofanya niamke kila asubuhi nikiwa na furaha.
+                        </p>
+                        <p>
+                            Asante kwa kuwa rafiki yangu wa karibu, mshauri wangu, na mwandani wangu wa maisha. Ahadi yangu kwako leo na siku zote ni kwamba nitasimama nawe, nitakulinda, na nitakufanya ujisikie mfalme/malkia wa maisha yangu kila siku.
+                        </p>
+                        <p class="text-right pt-4 font-sans text-sm font-bold text-rose-600">
+                            — Wako Wa Milele ❤️
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-start">
+                    <button onclick="goToStep(4)" class="px-6 py-3 rounded-full text-stone-600 text-sm font-medium hover:bg-white/50 transition">
+                        ⬅ Nyuma
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="max-w-3xl mx-auto w-full text-center text-xs text-stone-500 py-4 z-10">
+        <p>&copy; 2026 — Imetengenezwa kwa ajili yako pekee ❤️</p>
+    </footer>
+
+    <!-- INTERACTIVE QUIZ MODAL GATEKEEPER -->
+    <div id="quizModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-8 rounded-3xl shadow-2xl text-center relative border-2 border-rose-300">
+            <div class="text-5xl mb-4 animate-pulse">❓</div>
+            <h3 id="modalQuestion" class="font-playfair text-2xl font-bold text-stone-800 mb-6 leading-snug">
+                <!-- Dynamic Question -->
+            </h3>
+
+            <!-- Action Buttons Container -->
+            <div id="buttonArea" class="relative min-h-[100px] flex items-center justify-center gap-4">
+                <button onclick="answerYes()" class="bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:scale-105 transition text-base z-10">
+                    Ndiyo! ❤️
+                </button>
+                
+                <button id="btnNo" onmouseover="runAwayNoBtn()" onclick="clickedNoBtn()" class="bg-stone-200 text-stone-700 font-medium px-8 py-3 rounded-full hover:bg-stone-300 transition text-base">
+                    Hapana 🙈
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        let currentStep = 1;
+        let pendingTargetStep = 1;
+
+        // Romantic Questions for Modal Gatekeeper
+        const romanticQuestions = {
+            1: "Hivi unajua kwamba wewe ndiye msichana mrembo kuliko wote duniani?",
+            2: "Je, unakiri kwamba siku yetu ya kwanza ilikuwa moja ya siku tamu zaidi?",
+            3: "Hivi unanipenda kwa dhati kama mimi ninavyokupenda wewe?",
+            4: "Upo tayari kufungua barua yangu ya mwisho ya moyoni?"
+        };
+
+        // 1. Floating Background Particles
+        function createFloatingItem() {
+            const container = document.getElementById('floating-bg');
+            const item = document.createElement('div');
+            item.className = 'floating-item';
+            const symbols = ['❤️', '🌸', '💖', '🌹', '✨'];
+            item.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+            item.style.left = Math.random() * 100 + 'vw';
+            item.style.fontSize = (Math.random() * 16 + 14) + 'px';
+            const duration = Math.random() * 4 + 6;
+            item.style.animationDuration = duration + 's';
+            container.appendChild(item);
+            setTimeout(() => item.remove(), duration * 1000);
+        }
+        setInterval(createFloatingItem, 500);
+
+        // 2. Typewriter Effect (Step 1)
+        const typewriterPhrases = [
+            "Ukurasa huu umeandaliwa kwa ajili ya mtu wa pekee sana...",
+            "Bonyeza kitufe hapa chini ili kuanza safari yetu ya mahaba..."
+        ];
+        let tPhraseIdx = 0, tCharIdx = 0, tDeleting = false;
+        function typewriter() {
+            const el = document.getElementById('typewriter');
+            const current = typewriterPhrases[tPhraseIdx];
+            if (tDeleting) {
+                el.innerText = current.substring(0, tCharIdx - 1);
+                tCharIdx--;
+            } else {
+                el.innerText = current.substring(0, tCharIdx + 1);
+                tCharIdx++;
+            }
+            let speed = tDeleting ? 30 : 70;
+            if (!tDeleting && tCharIdx === current.length) {
+                speed = 2000;
+                tDeleting = true;
+            } else if (tDeleting && tCharIdx === 0) {
+                tDeleting = false;
+                tPhraseIdx = (tPhraseIdx + 1) % typewriterPhrases.length;
+                speed = 400;
+            }
+            setTimeout(typewriter, speed);
+        }
+        typewriter();
+
+        // 3. Count Up Relationship Timer
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 13);
+        startDate.setHours(0, 0, 0, 0);
+
+        function updateTimer() {
+            const diff = new Date().getTime() - startDate.getTime();
+            if (diff > 0) {
+                document.getElementById('days').innerText = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+                document.getElementById('hours').innerText = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                document.getElementById('minutes').innerText = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                document.getElementById('seconds').innerText = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+            }
+        }
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // 4. MOTION-STYLE GALLERY REVEAL
+        const galleryCards = document.querySelectorAll('.gallery-card');
+        const galleryObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    galleryObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.18 });
+
+        galleryCards.forEach((card, index) => {
+            card.style.transitionDelay = `${index * 90}ms`;
+            galleryObserver.observe(card);
+        });
+
+        // 5. STEPPER NAVIGATION LOGIC
+        function goToStep(step) {
+            document.querySelectorAll('.step-view').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            
+            currentStep = step;
+            
+            // Update Stepper Progress
+            const progress = (step / 5) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('stepCounter').innerText = `Hatua ${step} kati ya 5`;
+
+            // Highlight Step Indicator Labels
+            for (let i = 1; i <= 5; i++) {
+                const label = document.getElementById(`label-${i}`);
+                if (label) {
+                    if (i <= step) {
+                        label.className = "text-rose-600 font-bold";
+                    } else {
+                        label.className = "text-stone-400 font-normal";
+                    }
+                }
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 6. MODAL GATEKEEPER TRIGGER
+        function promptNextStep(fromStep) {
+            pendingTargetStep = fromStep + 1;
+            const question = romanticQuestions[fromStep] || "Je, upo tayari kuendelea?";
+            document.getElementById('modalQuestion').innerText = question;
+            
+            // Reset 'No' button position
+            const noBtn = document.getElementById('btnNo');
+            noBtn.style.position = 'static';
+            noBtn.style.transform = 'none';
+
+            document.getElementById('quizModal').classList.remove('hidden');
+        }
+
+        // 7. 'NO' BUTTON RUNAWAY LOGIC
+        function runAwayNoBtn() {
+            const noBtn = document.getElementById('btnNo');
+            noBtn.style.position = 'absolute';
+            
+            // Generate random positions within the container bounds
+            const randomX = (Math.random() - 0.5) * 260;
+            const randomY = (Math.random() - 0.5) * 160;
+
+            noBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+        }
+
+        function clickedNoBtn() {
+            alert("Hauwezi kusema Hapana! Jaribu tena kusema Ndiyo ❤️");
+            runAwayNoBtn();
+        }
+
+        // 8. 'YES' BUTTON CLICKED (CELEBRATION)
+        function answerYes() {
+            // Trigger Confetti / Hearts Burst
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            // Close Modal & Go to Next Step
+            document.getElementById('quizModal').classList.add('hidden');
+            goToStep(pendingTargetStep);
+        }
+
+        // 9. FINAL STEP LETTER OPENING
+        function openFinalLetter() {
+            const content = document.getElementById('letterBody');
+            const text = document.getElementById('letterClickText');
+            const icon = document.getElementById('envelopeIcon');
+
+            if (!content.classList.contains('open')) {
+                content.classList.add('open');
+                text.innerText = "Barua Yako Imefunguliwa ✨";
+                icon.innerText = "💖";
+                icon.classList.remove('animate-bounce');
+
+                // Big celebration confetti
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 120,
+                        spread: 100,
+                        origin: { y: 0.5 }
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
